@@ -1,6 +1,6 @@
 package com.ptithcm.onlinetest.controller;
 
-import com.ptithcm.onlinetest.payload.LoginRequest;
+import com.ptithcm.onlinetest.payload.request.LoginRequest;
 import com.ptithcm.onlinetest.repository.RoleRepository;
 import com.ptithcm.onlinetest.repository.UserRepository;
 import com.ptithcm.onlinetest.security.JwtTokenProvider;

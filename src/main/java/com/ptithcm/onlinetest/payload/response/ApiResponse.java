@@ -1,4 +1,4 @@
-package com.ptithcm.onlinetest.payload;
+package com.ptithcm.onlinetest.payload.response;
 
 public class ApiResponse {
     private Boolean success;

@@ -1,4 +1,4 @@
-package com.ptithcm.onlinetest.payload;
+package com.ptithcm.onlinetest.payload.request;
 
 import javax.validation.constraints.NotBlank;
 
