@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 public class UserPrincipal implements UserDetails {
 
+    private User user;
     private Long id;
 
 
@@ -109,7 +110,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return user.isEnabled();
     }
 
     @Override

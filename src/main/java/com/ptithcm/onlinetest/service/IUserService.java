@@ -1,94 +1,40 @@
 package com.ptithcm.onlinetest.service;
 
-import com.ptithcm.onlinetest.exception.UserAlreadyExistException;
-import com.ptithcm.onlinetest.model.Role;
+import com.ptithcm.onlinetest.model.PasswordResetToken;
 import com.ptithcm.onlinetest.model.User;
 import com.ptithcm.onlinetest.model.VerificationToken;
 import com.ptithcm.onlinetest.payload.dto.UserDto;
-import com.ptithcm.onlinetest.repository.RoleRepository;
-import com.ptithcm.onlinetest.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Set;
+import java.util.Optional;
 
-public class IUserService implements UserService{
+public interface IUserService {
+    User registerNewUserAccount(UserDto accountDto);
 
-    @Autowired
-    UserRepository userRepository;
+    User getUser(String verificationToken);
 
-    @Autowired
-    PasswordEncoder passwordEncoder;
+    void saveRegisteredUser(User user);
 
-    @Autowired
-    RoleRepository roleRepository;
-    @Override
-    public User registerNewUserAccount(UserDto accountDto) {
-        if(userRepository.existsByEmail(accountDto.getEmail())) {
-            throw new UserAlreadyExistException("There is an account with that email address: " + accountDto.getEmail());
-        }
-        final User user = new User();
+    void deleteUser(User user);
 
-        user.setFirstName(accountDto.getFirstName());
-        user.setLastName(accountDto.getLastName());
-        user.setPassword(passwordEncoder.encode(accountDto.getPassword()));
-        user.setEmail(accountDto.getEmail());
-        user.setRoles((Set<Role>) roleRepository.findByName("ROLE_USER"));
-        return userRepository.save(user);
-    }
+    void createVerificationTokenForUser(User user, String token);
 
-    @Override
-    public User getUser(String verificationToken) {
-        return null;
-    }
+    VerificationToken getVerificationToken(String existingVerificationToken);
 
-    @Override
-    public void saveRegisteredUser(User user) {
+    VerificationToken generateNewVerificationToken(String token);
 
-    }
+    void createPasswordResetTokenForUser(User user, String token);
 
-    @Override
-    public void deleteUser(User user) {
+    User findUserByEmail(String email);
 
-    }
+    PasswordResetToken getPasswordResetToken(String token);
 
-    @Override
-    public void createVerificationTokenForUser(User user, String token) {
+    Optional<User> getUserByPasswordResetToken(String token);
 
-    }
+    Optional<User> getUserByID(long id);
 
-    @Override
-    public VerificationToken getVerificationToken(String VerificationToken) {
-        return null;
-    }
+    void changeUserPassword(User user, String password);
 
-    @Override
-    public VerificationToken generateNewVerificationToken(String token) {
-        return null;
-    }
+    boolean checkIfValidOldPassword(User user, String password);
 
-    @Override
-    public void createPasswordResetTokenForUser(User user, String token) {
-
-    }
-
-    @Override
-    public User findUserByEmail(String email) {
-        return null;
-    }
-
-    @Override
-    public void changeUserPassword(User user, String password) {
-
-    }
-
-    @Override
-    public boolean checkIfValidOldPassword(User user, String password) {
-        return false;
-    }
-
-    @Override
-    public String validateVerificationToken(String token) {
-        return null;
-    }
+    String validateVerificationToken(String token);
 }

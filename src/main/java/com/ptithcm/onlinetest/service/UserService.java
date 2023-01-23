@@ -1,37 +1,166 @@
 package com.ptithcm.onlinetest.service;
 
+import com.ptithcm.onlinetest.exception.UserAlreadyExistException;
+import com.ptithcm.onlinetest.model.PasswordResetToken;
+import com.ptithcm.onlinetest.model.Role;
 import com.ptithcm.onlinetest.model.User;
 import com.ptithcm.onlinetest.model.VerificationToken;
 import com.ptithcm.onlinetest.payload.dto.UserDto;
+import com.ptithcm.onlinetest.repository.PasswordResetTokenRepository;
+import com.ptithcm.onlinetest.repository.RoleRepository;
+import com.ptithcm.onlinetest.repository.UserRepository;
+import com.ptithcm.onlinetest.repository.VerificationTokenRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-public interface UserService {
-    User registerNewUserAccount(UserDto accountDto);
+import java.util.Calendar;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
-    User getUser(String verificationToken);
+@Service
+@Transactional
+public class UserService implements IUserService{
 
-    void saveRegisteredUser(User user);
+    @Autowired
+    UserRepository userRepository;
 
-    void deleteUser(User user);
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
-    void createVerificationTokenForUser(User user, String token);
+    @Autowired
+    RoleRepository roleRepository;
 
-    VerificationToken getVerificationToken(String VerificationToken);
+    @Autowired
+    VerificationTokenRepository tokenRepository;
 
-    VerificationToken generateNewVerificationToken(String token);
+    @Autowired
+    PasswordResetTokenRepository resetTokenRepository;
 
-    void createPasswordResetTokenForUser(User user, String token);
+    public static final String TOKEN_INVALID = "invalidToken";
+    public static final String TOKEN_EXPIRED = "expired";
+    public static final String TOKEN_VALID = "valid";
 
-    User findUserByEmail(String email);
+    @Override
+    public User registerNewUserAccount(UserDto accountDto) {
+        if(userRepository.existsByEmail(accountDto.getEmail())) {
+            throw new UserAlreadyExistException("There is an account with that email address: " + accountDto.getEmail());
+        }
+        final User user = new User();
 
-//    PasswordResetToken getPasswordResetToken(String token);
+        user.setFirstName(accountDto.getFirstName());
+        user.setLastName(accountDto.getLastName());
+        user.setPassword(passwordEncoder.encode(accountDto.getPassword()));
+        user.setEmail(accountDto.getEmail());
+        user.setRoles((Set<Role>) roleRepository.findByName("ROLE_USER"));
+        return userRepository.save(user);
+    }
 
-//    Optional<User> getUserByPasswordResetToken(String token);
+    @Override
+    public User getUser(String verificationToken) {
+        VerificationToken token = tokenRepository.findByToken(verificationToken);
+        if(token != null) {
+            return token.getUser();
+        }
+        return null;
+    }
 
-//    Optional<User> getUserByID(long id);
+    @Override
+    public void saveRegisteredUser(User user) {
+        userRepository.save(user);
+    }
 
-    void changeUserPassword(User user, String password);
+    @Override
+    public void deleteUser(User user) {
+        final VerificationToken verificationToken = tokenRepository.findByUser(user);
 
-    boolean checkIfValidOldPassword(User user, String password);
+        if(verificationToken != null) {
+            tokenRepository.delete(verificationToken);
+        }
 
-    String validateVerificationToken(String token);
+        final PasswordResetToken passwordResetToken = resetTokenRepository.findByUser(user);
+
+        if(resetTokenRepository != null) {
+            resetTokenRepository.delete(passwordResetToken);
+        }
+
+        userRepository.delete(user);
+    }
+
+    @Override
+    public void createVerificationTokenForUser(User user, String token) {
+        final VerificationToken myToken = new VerificationToken(token, user);
+        tokenRepository.save(myToken);
+    }
+
+    @Override
+    public VerificationToken getVerificationToken(String VerificationToken) {
+        return tokenRepository.findByToken(VerificationToken);
+    }
+
+    @Override
+    public VerificationToken generateNewVerificationToken(String token) {
+        VerificationToken verificationToken = tokenRepository.findByToken(token);
+        verificationToken.updateToken(UUID.randomUUID().toString());
+        verificationToken = tokenRepository.save(verificationToken);
+        return verificationToken;
+    }
+
+    @Override
+    public void createPasswordResetTokenForUser(User user, String token) {
+        final PasswordResetToken passwordResetToken = new PasswordResetToken(token, user);
+        resetTokenRepository.save(passwordResetToken);
+    }
+
+    @Override
+    public User findUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    @Override
+    public PasswordResetToken getPasswordResetToken(String token) {
+        return resetTokenRepository.findByToken(token);
+    }
+
+    @Override
+    public Optional<User> getUserByPasswordResetToken(String token) {
+        return Optional.ofNullable(resetTokenRepository.findByToken(token).getUser());
+    }
+
+    @Override
+    public Optional<User> getUserByID(long id) {
+        return userRepository.findById(id);
+    }
+
+    @Override
+    public void changeUserPassword(User user, String password) {
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+    }
+
+    @Override
+    public boolean checkIfValidOldPassword(User user, String oldPassword) {
+        return passwordEncoder.matches(oldPassword, user.getPassword());
+    }
+
+    @Override
+    public String validateVerificationToken(String token) {
+        VerificationToken verificationToken = tokenRepository.findByToken(token);
+        if(verificationToken == null) {
+            return TOKEN_INVALID;
+        }
+        final User user = verificationToken.getUser();
+
+        final Calendar calendar = Calendar.getInstance();
+        if(verificationToken.getExpiryDate().getTime() - calendar.getTime().getTime() <= 0) {
+            tokenRepository.delete(verificationToken);
+            return TOKEN_EXPIRED;
+        }
+
+        user.setEnabled(false);
+        userRepository.save(user);
+        return TOKEN_VALID;
+    }
 }
