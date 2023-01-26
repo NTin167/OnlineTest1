@@ -1,10 +1,8 @@
 package com.ptithcm.onlinetest.service;
 
+import com.ptithcm.onlinetest.exception.AppException;
 import com.ptithcm.onlinetest.exception.UserAlreadyExistException;
-import com.ptithcm.onlinetest.model.PasswordResetToken;
-import com.ptithcm.onlinetest.model.Role;
-import com.ptithcm.onlinetest.model.User;
-import com.ptithcm.onlinetest.model.VerificationToken;
+import com.ptithcm.onlinetest.model.*;
 import com.ptithcm.onlinetest.payload.dto.UserDto;
 import com.ptithcm.onlinetest.repository.PasswordResetTokenRepository;
 import com.ptithcm.onlinetest.repository.RoleRepository;
@@ -16,8 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -49,12 +47,14 @@ public class UserService implements IUserService{
             throw new UserAlreadyExistException("There is an account with that email address: " + accountDto.getEmail());
         }
         final User user = new User();
-
+        System.out.println(accountDto.getPassword());
+        user.setUsername(accountDto.getLastName());
         user.setFirstName(accountDto.getFirstName());
         user.setLastName(accountDto.getLastName());
         user.setPassword(passwordEncoder.encode(accountDto.getPassword()));
         user.setEmail(accountDto.getEmail());
-        user.setRoles((Set<Role>) roleRepository.findByName("ROLE_USER"));
+        Role userRole = roleRepository.findByName(RoleName.ROLE_USER).orElseThrow(() -> new AppException("User Role not set."));
+        user.setRoles(Collections.singleton(userRole));
         return userRepository.save(user);
     }
 
@@ -162,5 +162,20 @@ public class UserService implements IUserService{
         user.setEnabled(false);
         userRepository.save(user);
         return TOKEN_VALID;
+    }
+
+    @Override
+    public boolean verifyRegistration(String verifyCode) {
+        if(tokenRepository.findByToken(verifyCode)!= null) {
+            System.out.println("access");
+        }
+        User user = tokenRepository.findByToken(verifyCode).getUser();
+        if(user.getEnable() == false)
+        {
+            user.setEnabled(true);
+            userRepository.save(user);
+            return true;
+        }
+        return false;
     }
 }

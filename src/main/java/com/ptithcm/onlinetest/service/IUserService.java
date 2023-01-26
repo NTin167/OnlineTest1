@@ -37,4 +37,6 @@ public interface IUserService {
     boolean checkIfValidOldPassword(User user, String password);
 
     String validateVerificationToken(String token);
+
+    boolean verifyRegistration(String verifyCode);
 }

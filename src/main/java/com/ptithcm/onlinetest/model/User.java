@@ -64,7 +64,11 @@ public class User extends DateAudit {
         )
         private Set<Role> roles = new HashSet<>();
 
+        public boolean getEnable() {
+                return enabled;
+        }
         public User() {
                 this.enabled = false;
         }
+
 }
