@@ -1,6 +1,7 @@
 package com.ptithcm.onlinetest.model;
 
 import javax.persistence.*;
+import java.util.Calendar;
 import java.util.Date;
 
 @Entity
@@ -23,11 +24,18 @@ public class PasswordResetToken {
         super();
     }
 
+    public PasswordResetToken(String token) {
+        super();
+        this.token = token;
+        this.expiryDate = calculateExpiryDate(EXPIRATION);
+    }
     public PasswordResetToken(String token, User user) {
         super();
         this.token = token;
         this.user = user;
+        this.expiryDate = calculateExpiryDate(EXPIRATION);
     }
+
 
     public Long getId() {
         return id;
@@ -55,5 +63,16 @@ public class PasswordResetToken {
 
     public void setExpiryDate(Date expiryDate) {
         this.expiryDate = expiryDate;
+    }
+
+    private Date calculateExpiryDate(final int expiryTimeInMinutes) {
+        final Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(new Date().getTime());
+        cal.add(Calendar.MINUTE, expiryTimeInMinutes);
+        return new Date(cal.getTime().getTime());
+    }
+    public void updateToken(final String token) {
+        this.token = token;
+        this.expiryDate = calculateExpiryDate(EXPIRATION);
     }
 }

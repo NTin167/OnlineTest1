@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class UserPrincipal implements UserDetails {
 
-    private User user;
+//    private User user;
     private Long id;
 
 
@@ -24,6 +24,8 @@ public class UserPrincipal implements UserDetails {
 
     @JsonIgnore
     private String password;
+
+    private boolean isEnable;
 
     private Collection<? extends GrantedAuthority> authorities;
 
@@ -110,7 +112,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.isEnabled();
+        return true;
     }
 
     @Override

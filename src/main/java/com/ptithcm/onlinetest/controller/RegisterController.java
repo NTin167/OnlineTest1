@@ -8,6 +8,7 @@ import com.ptithcm.onlinetest.registration.OnRegistrationCompleteEvent;
 import com.ptithcm.onlinetest.repository.UserRepository;
 import com.ptithcm.onlinetest.repository.VerificationTokenRepository;
 import com.ptithcm.onlinetest.security.JwtTokenProvider;
+import com.ptithcm.onlinetest.security.UserSecurityService;
 import com.ptithcm.onlinetest.service.UserService;
 import com.ptithcm.onlinetest.util.GenericResponse;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.core.env.Environment;
 import org.springframework.data.repository.query.Param;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,6 +31,7 @@ import javax.validation.Valid;
 import javax.validation.ValidationException;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -65,6 +68,9 @@ public class RegisterController {
     @Autowired
     MessageSource messages;
 
+    @Autowired
+    UserSecurityService userSecurityService;
+
     @PostMapping("/registration")
     public GenericResponse registerUserAccount(@Valid @RequestBody final UserDto accountDto, final HttpServletRequest request) {
 
@@ -83,23 +89,23 @@ public class RegisterController {
         return new GenericResponse(messages.getMessage("message.resendToken", null, request.getLocale()));
     }
 
-    @PostMapping("/user/savePassword")
-    public GenericResponse savePassword(final Locale locale, @Valid PasswordDto passwordDto) {
-
-//        final String result = securityUserService.validatePasswordResetToken(passwordDto.getToken());
+//    @PostMapping("/user/savePassword")
+//    public GenericResponse savePassword(final Locale locale, @Valid PasswordDto passwordDto) {
 //
-//        if(result != null) {
-//            return new GenericResponse(messages.getMessage("auth.message." + result, null, locale));
+////        final String result = securityUserService.validatePasswordResetToken(passwordDto.getToken());
+////
+////        if(result != null) {
+////            return new GenericResponse(messages.getMessage("auth.message." + result, null, locale));
+////        }
+//
+//        Optional<User> user = userService.getUserByPasswordResetToken(passwordDto.getToken());
+//        if(user.isPresent()) {
+//            userService.changeUserPassword(user.get(), passwordDto.getNewPassword());
+//            return new GenericResponse(messages.getMessage("message.resetPasswordSuc", null, locale));
+//        } else {
+//            return new GenericResponse(messages.getMessage("auth.message.invalid", null, locale));
 //        }
-
-        Optional<User> user = userService.getUserByPasswordResetToken(passwordDto.getToken());
-        if(user.isPresent()) {
-            userService.changeUserPassword(user.get(), passwordDto.getNewPassword());
-            return new GenericResponse(messages.getMessage("message.resetPasswordSuc", null, locale));
-        } else {
-            return new GenericResponse(messages.getMessage("auth.message.invalid", null, locale));
-        }
-    }
+//    }
 
     // Change user password
     @PostMapping("/user/updatePassword")
@@ -109,7 +115,7 @@ public class RegisterController {
             throw new ValidationException();
         }
         userService.changeUserPassword(user, passwordDto.getNewPassword());
-        return new GenericResponse(messages.getMessage("message.updatePasswordSuc", null, locale));
+        return new GenericResponse(messages.getMessage("message.updatePassword", null, locale));
     }
 
     @GetMapping("/registrationConfirm")
@@ -123,6 +129,54 @@ public class RegisterController {
         return new GenericResponse("failure");
     }
 
+
+    @PostMapping("/resetPassword")
+    public GenericResponse resetPassword(HttpServletRequest request,
+                                         @RequestParam("email") String email) {
+        User user = userService.findUserByEmail(email);
+
+        if(user == null) {
+            return new GenericResponse("Username not found");
+        }
+        String token = UUID.randomUUID().toString();
+        userService.createPasswordResetTokenForUser(user, token);
+        mailSender.send(constructResetTokenEmail(getAppUrl(request), request.getLocale(), token, user));
+        return new GenericResponse(messages.getMessage("message.resetPasswordEmail", null, request.getLocale()));
+    }
+
+    @GetMapping("/changePassword")
+    public GenericResponse changePassword(@RequestParam("token") String token) {
+        String result = userSecurityService.validatePasswordResetToken(token);
+        if(result != null) {
+            return new GenericResponse("false");
+        }
+        else {
+            return new GenericResponse("success");
+        }
+    }
+
+    @PostMapping("/user/savePassword")
+    public ResponseEntity<?> savePassword(@Valid @RequestBody PasswordDto passwordDto) {
+        String result = userSecurityService.validatePasswordResetToken(passwordDto.getToken());
+        System.out.println(result);
+        if(result != null) {
+            return ResponseEntity.ok("invalid Token");
+        }
+        Optional<User> user = userService.getUserByPasswordResetToken(passwordDto.getToken());
+
+        if(user.isPresent()) {
+            userService.changeUserPassword(user.get(), passwordDto.getNewPassword());
+            return ResponseEntity.ok("Password updated successfully");
+        }
+        else {
+            return ResponseEntity.ok("Password updated unsuccessfully");
+        }
+
+    }
+
+
+//    ---------------------------------------------------------------------
+//    NON API
     private String getAppUrl(HttpServletRequest request) {
         return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
     }
@@ -142,7 +196,7 @@ public class RegisterController {
     }
 
     private SimpleMailMessage constructResetTokenEmail(final String contextPath, final Locale locale, final String token, final User user) {
-        final String url = contextPath + "/user/changePassword?token=" + token;
+        final String url = contextPath + "/api/auth/changePassword?token=" + token;
         final String message = messages.getMessage("message.resetPassword", null, locale);
         return constructEmail("Reset Password", message + " \r\n" + url, user);
     }
