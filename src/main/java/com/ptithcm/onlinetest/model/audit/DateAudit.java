@@ -23,6 +23,7 @@ public abstract class DateAudit implements Serializable {
     @LastModifiedDate
     private Instant updatedAt;
 
+
     public Instant getCreatedAt() {
         return createdAt;
     }

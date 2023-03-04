@@ -3,7 +3,7 @@ package com.ptithcm.onlinetest.service;
 import com.ptithcm.onlinetest.exception.AppException;
 import com.ptithcm.onlinetest.exception.UserAlreadyExistException;
 import com.ptithcm.onlinetest.model.*;
-import com.ptithcm.onlinetest.payload.dto.UserDto;
+import com.ptithcm.onlinetest.payload.request.SignUpRequest;
 import com.ptithcm.onlinetest.repository.PasswordResetTokenRepository;
 import com.ptithcm.onlinetest.repository.RoleRepository;
 import com.ptithcm.onlinetest.repository.UserRepository;
@@ -42,17 +42,19 @@ public class UserService implements IUserService{
     public static final String TOKEN_VALID = "valid";
 
     @Override
-    public User registerNewUserAccount(UserDto accountDto) {
-        if(userRepository.existsByEmail(accountDto.getEmail())) {
-            throw new UserAlreadyExistException("There is an account with that email address: " + accountDto.getEmail());
+    public User registerNewUserAccount(SignUpRequest signUpRequest) {
+        if(userRepository.existsByEmail(signUpRequest.getEmail())) {
+            throw new UserAlreadyExistException("There is an account with that email address: " + signUpRequest.getEmail());
         }
-        final User user = new User();
-        System.out.println(accountDto.getPassword());
-        user.setUsername(accountDto.getLastName());
-        user.setFirstName(accountDto.getFirstName());
-        user.setLastName(accountDto.getLastName());
-        user.setPassword(passwordEncoder.encode(accountDto.getPassword()));
-        user.setEmail(accountDto.getEmail());
+        if(userRepository.existsByUsername(signUpRequest.getUserName())) {
+            throw new UserAlreadyExistException("There is an account with that email address" + signUpRequest.getUserName());
+        }
+        User user = new User();
+        user.setUsername(signUpRequest.getLastName());
+        user.setFirstName(signUpRequest.getFirstName());
+        user.setLastName(signUpRequest.getLastName());
+        user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
+        user.setEmail(signUpRequest.getEmail());
         Role userRole = roleRepository.findByName(RoleName.ROLE_USER).orElseThrow(() -> new AppException("User Role not set."));
         user.setRoles(Collections.singleton(userRole));
         return userRepository.save(user);

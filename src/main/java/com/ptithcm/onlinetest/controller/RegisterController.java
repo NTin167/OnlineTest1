@@ -3,7 +3,7 @@ package com.ptithcm.onlinetest.controller;
 import com.ptithcm.onlinetest.model.User;
 import com.ptithcm.onlinetest.model.VerificationToken;
 import com.ptithcm.onlinetest.payload.dto.PasswordDto;
-import com.ptithcm.onlinetest.payload.dto.UserDto;
+import com.ptithcm.onlinetest.payload.request.SignUpRequest;
 import com.ptithcm.onlinetest.registration.OnRegistrationCompleteEvent;
 import com.ptithcm.onlinetest.repository.UserRepository;
 import com.ptithcm.onlinetest.repository.VerificationTokenRepository;
@@ -72,11 +72,9 @@ public class RegisterController {
     UserSecurityService userSecurityService;
 
     @PostMapping("/registration")
-    public GenericResponse registerUserAccount(@Valid @RequestBody final UserDto accountDto, final HttpServletRequest request) {
-
-        System.out.println(accountDto.toString());
-        LOGGER.debug("Registering user account with information: {}", accountDto);
-        final User registered = userService.registerNewUserAccount(accountDto);
+    public GenericResponse registerUserAccount(@Valid @RequestBody SignUpRequest signUpRequest, HttpServletRequest request) {
+        LOGGER.debug("Registering user account with information: {}", signUpRequest);
+        User registered = userService.registerNewUserAccount(signUpRequest);
         eventPublisher.publishEvent(new OnRegistrationCompleteEvent(getAppUrl(request), request.getLocale(), registered));
         return new GenericResponse("success");
     }

@@ -20,4 +20,14 @@ public class TakeAnswer extends DateAudit {
     private int active;
 
     private String content;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    private QuizQuestion quizQuestion;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    private QuizAnswer quizAnswer;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Take take;
+
 }

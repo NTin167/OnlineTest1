@@ -1,11 +1,14 @@
 package com.ptithcm.onlinetest.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ptithcm.onlinetest.model.audit.DateAudit;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "quiz_question")
@@ -31,5 +34,12 @@ public class QuizQuestion extends DateAudit {
     @ManyToOne(fetch = FetchType.EAGER)
     private Quiz quiz;
 
+    @OneToMany(mappedBy = "quizQuestion")
+    @JsonIgnore
+    private Set<QuizAnswer> quizzAnswers = new HashSet<>();
+
+    @OneToMany(mappedBy = "quizQuestion")
+    @JsonIgnore
+    private Set<TakeAnswer> takeAnswers = new HashSet<>();
 
 }

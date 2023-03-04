@@ -1,27 +1,51 @@
 package com.ptithcm.onlinetest.payload.response;
 
-public class ApiResponse {
-    private Boolean success;
-    private String message;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
+import lombok.Builder.Default;
 
-    public ApiResponse(Boolean success, String message) {
-        this.success = success;
-        this.message = message;
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
+public class ApiResponse <T> {
+    @Default
+    private int status = 200;
+
+    @Default
+    private int error = 0;
+
+    @Default
+    private String message = null;
+
+    private T data;
+
+    public ApiResponse(int status) {
+        this.status = status;
     }
 
-    public Boolean getSuccess() {
-        return success;
+    public ApiResponse(int status, int error) {
+        this.status = status;
+        this.error = error;
     }
 
-    public void setSuccess(Boolean success) {
-        this.success = success;
+    public ApiResponse(int status, T data) {
+        this.status = 200;
+        this.data = data;
     }
 
-    public String getMessage() {
-        return message;
+    public static <T> ApiResponse<T> of(T data) {
+        ApiResponse apiResponse = new ApiResponse<T>();
+        apiResponse.setData(data);
+        return apiResponse;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public static ApiResponse fromErrorCode(CodeStatus codeStatus) {
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setError(codeStatus.getCode());
+        apiResponse.setStatus(codeStatus.getStatus().value());
+        return apiResponse;
     }
 }

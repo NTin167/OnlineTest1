@@ -25,7 +25,7 @@ public class UserPrincipal implements UserDetails {
     @JsonIgnore
     private String password;
 
-    private boolean isEnable;
+//    private boolean isEnable;
 
     private Collection<? extends GrantedAuthority> authorities;
 

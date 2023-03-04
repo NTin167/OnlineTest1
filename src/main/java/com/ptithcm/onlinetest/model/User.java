@@ -1,5 +1,6 @@
 package com.ptithcm.onlinetest.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ptithcm.onlinetest.model.audit.DateAudit;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +11,7 @@ import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -56,6 +58,19 @@ public class User extends DateAudit {
 
         @Column(name = "lastname")
         private String lastName;
+
+        @Column(name = "host")
+        private int host;
+
+        private Instant lastLogin;
+
+        @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+        @JsonIgnore
+        private Set<Quiz> quizzes = new HashSet<>();
+
+        @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+        @JsonIgnore
+        private Set<Category> categories = new HashSet<>();
 
         @ManyToMany(fetch = FetchType.LAZY)
         @JoinTable(name = "user_roles",

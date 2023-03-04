@@ -4,11 +4,12 @@ import com.ptithcm.onlinetest.model.PasswordResetToken;
 import com.ptithcm.onlinetest.model.User;
 import com.ptithcm.onlinetest.model.VerificationToken;
 import com.ptithcm.onlinetest.payload.dto.UserDto;
+import com.ptithcm.onlinetest.payload.request.SignUpRequest;
 
 import java.util.Optional;
 
 public interface IUserService {
-    User registerNewUserAccount(UserDto accountDto);
+    User registerNewUserAccount(SignUpRequest signUpRequest);
 
     User getUser(String verificationToken);
 
