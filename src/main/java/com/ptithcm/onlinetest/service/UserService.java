@@ -50,7 +50,7 @@ public class UserService implements IUserService{
             throw new UserAlreadyExistException("There is an account with that email address" + signUpRequest.getUserName());
         }
         User user = new User();
-        user.setUsername(signUpRequest.getLastName());
+        user.setUsername(signUpRequest.getUserName());
         user.setFirstName(signUpRequest.getFirstName());
         user.setLastName(signUpRequest.getLastName());
         user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
