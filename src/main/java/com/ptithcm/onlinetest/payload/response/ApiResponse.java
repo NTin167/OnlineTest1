@@ -31,9 +31,9 @@ public class ApiResponse <T> {
         this.error = error;
     }
 
-    public ApiResponse(int status, T data) {
-        this.status = 200;
+    public ApiResponse(T data) {
         this.data = data;
+        this.status = 200;
     }
 
     public static <T> ApiResponse<T> of(T data) {

@@ -3,7 +3,9 @@ package com.ptithcm.onlinetest.controller;
 import com.ptithcm.onlinetest.model.User;
 import com.ptithcm.onlinetest.model.VerificationToken;
 import com.ptithcm.onlinetest.payload.dto.PasswordDto;
+import com.ptithcm.onlinetest.payload.request.LoginRequest;
 import com.ptithcm.onlinetest.payload.request.SignUpRequest;
+import com.ptithcm.onlinetest.payload.response.JwtAuthenticationResponse;
 import com.ptithcm.onlinetest.registration.OnRegistrationCompleteEvent;
 import com.ptithcm.onlinetest.repository.UserRepository;
 import com.ptithcm.onlinetest.repository.VerificationTokenRepository;
@@ -22,6 +24,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -73,6 +77,7 @@ public class RegisterController {
 
     @PostMapping("/registration")
     public GenericResponse registerUserAccount(@Valid @RequestBody SignUpRequest signUpRequest, HttpServletRequest request) {
+        System.out.println(signUpRequest.toString());
         LOGGER.debug("Registering user account with information: {}", signUpRequest);
         User registered = userService.registerNewUserAccount(signUpRequest);
         eventPublisher.publishEvent(new OnRegistrationCompleteEvent(getAppUrl(request), request.getLocale(), registered));
@@ -170,6 +175,22 @@ public class RegisterController {
             return ResponseEntity.ok("Password updated unsuccessfully");
         }
 
+    }
+
+
+    @PostMapping("/signin")
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+        System.out.println(loginRequest);
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsernameOrEmail(), loginRequest.getPassword()
+                )
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        String jwt = tokenProvider.generateToken(authentication);
+
+        return ResponseEntity.ok(new JwtAuthenticationResponse(jwt));
     }
 
 

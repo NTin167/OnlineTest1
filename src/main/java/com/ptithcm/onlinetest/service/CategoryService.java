@@ -1,6 +1,8 @@
 package com.ptithcm.onlinetest.service;
 
+import com.ptithcm.onlinetest.exception.AppException;
 import com.ptithcm.onlinetest.exception.BadRequestException;
+import com.ptithcm.onlinetest.exception.ResourceNotFoundException;
 import com.ptithcm.onlinetest.model.Category;
 import com.ptithcm.onlinetest.model.Quiz;
 import com.ptithcm.onlinetest.model.User;
@@ -14,20 +16,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.List;
 import java.util.Optional;
 
 @Transactional
 @Service
 public class CategoryService implements ICategoryService{
-    @Autowired
-    CategoryRepository categoryRepository;
+//    @Autowired
+//    CategoryRepository categoryRepository;
+
+    private final CategoryRepository categoryRepository;
+    public CategoryService(CategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
+    }
 
     @Autowired
     QuizRepository quizRepository;
 
     @Autowired
     UserRepository userRepository;
+
+
 
     public Iterable<Category> getAllCategory() {
         return categoryRepository.findAll();
@@ -49,7 +57,7 @@ public class CategoryService implements ICategoryService{
         }
         else
         {
-            newCategory.setUser(null);
+            throw new ResourceNotFoundException("user", "userId", user);
         }
         return categoryRepository.save(newCategory);
     }
@@ -70,24 +78,27 @@ public class CategoryService implements ICategoryService{
         if(categoryRequest.getUserId()!= null && user.isPresent()) {
             category.get().setUser(user.get());
         }
+        else
+            throw new AppException("User id not found");
         categoryRepository.save(category.get());
 
         return CategoryResponse.builder().status(true).message("Update category Successfully").category(category.get()).build();
     }
     @Override
+    @Transactional
     public CategoryResponse deleteCategory(Long categoryId) {
         Optional<Category> category = categoryRepository.findById(categoryId);
-        if (!category.isPresent()) {
-            if (quizRepository.findAllByCategory_Title(category.get().getTitle()).iterator().hasNext())
-                return CategoryResponse.builder().status(false).category(category.get()).message("Category has already Quiz").build();
+        if (category.isPresent()) {
+            if(quizRepository.existsByCategory_Id(categoryId))
+                return CategoryResponse.builder().status(false).message("Category has already Quiz").build();
             categoryRepository.delete(category.get());
-            return CategoryResponse.builder().status(true).category(category.get()).message("Deleted category successfully").build();
+            return CategoryResponse.builder().status(true).message("Deleted category successfully").build();
         } else {
-            return CategoryResponse.builder().status(false).category(null).message("Category is not exist").build();
+            return CategoryResponse.builder().status(false).message("Category is not exist").build();
         }
     }
     @Override
-    public List<Quiz> getQuizzByCategory(String titleCategory) {
-        return quizRepository.findAllByCategory_Title(titleCategory);
+    public Iterable<Quiz> getQuizzByCategory(Long id) {
+        return quizRepository.findAllByCategoryId(id);
     }
 }

@@ -12,7 +12,7 @@ public class QuizRequest {
 
     private String metaTitle;
 
-    private String slug;
+    private String linkImage;
 
     private String summary;
 
@@ -31,4 +31,6 @@ public class QuizRequest {
     private String content;
 
     private Long userId;
+
+    private Long categoryId;
 }

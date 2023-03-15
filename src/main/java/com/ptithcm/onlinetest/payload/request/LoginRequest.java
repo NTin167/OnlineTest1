@@ -25,11 +25,4 @@ public class LoginRequest {
         this.password = password;
     }
 
-    @Override
-    public String toString() {
-        return "LoginRequest{" +
-                "usernameOrEmail='" + usernameOrEmail + '\'' +
-                ", password='" + password + '\'' +
-                '}';
-    }
 }

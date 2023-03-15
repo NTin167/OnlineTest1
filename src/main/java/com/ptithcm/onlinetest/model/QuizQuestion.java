@@ -34,12 +34,12 @@ public class QuizQuestion extends DateAudit {
     @ManyToOne(fetch = FetchType.EAGER)
     private Quiz quiz;
 
-    @OneToMany(mappedBy = "quizQuestion")
-    @JsonIgnore
-    private Set<QuizAnswer> quizzAnswers = new HashSet<>();
-
-    @OneToMany(mappedBy = "quizQuestion")
-    @JsonIgnore
-    private Set<TakeAnswer> takeAnswers = new HashSet<>();
+//    @OneToMany(mappedBy = "quizQuestion")
+//    @JsonIgnore
+//    private Set<QuizAnswer> quizzAnswers = new HashSet<>();
+//
+//    @OneToMany(mappedBy = "quizQuestion")
+//    @JsonIgnore
+//    private Set<TakeAnswer> takeAnswers = new HashSet<>();
 
 }

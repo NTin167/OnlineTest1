@@ -16,16 +16,23 @@ import java.net.URI;
 @RestController
 @RequestMapping("/api/categories")
 public class CategoryController {
+
     @Autowired
     CategoryService categoryService;
 
     @GetMapping("/getAll")
-    Iterable<Category> getAllCategories() {
+    public Iterable<Category> getAllCategories() {
         return categoryService.getAllCategory();
     }
 
+    @GetMapping("/getQuizzes/{categoryId}")
+    public Iterable<?> getQuizzesByCategory(@PathVariable(value = "categoryId") Long id) {
+
+        return categoryService.getQuizzByCategory(id);
+    }
+
     @PostMapping("")
-    ResponseEntity<?> createCategory(@RequestBody @Valid CategoryRequest categoryRequest) {
+    public ResponseEntity<?> createCategory(@RequestBody @Valid CategoryRequest categoryRequest) {
         Category category = categoryService.createCategory(categoryRequest);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest().path("/{categoryId}")
@@ -35,13 +42,30 @@ public class CategoryController {
     }
 
     @PutMapping(value = "/edit/{categoryId}")
-    CategoryResponse updateCategory(@RequestBody @Valid CategoryRequest categoryRequest, @PathVariable(value = "categoryId") Long categoryId) {
+    public CategoryResponse updateCategory(@RequestBody @Valid CategoryRequest categoryRequest, @PathVariable(value = "categoryId") Long categoryId) {
         return categoryService.updateCategory(categoryId ,categoryRequest);
     }
 
-    @DeleteMapping(value = "delete")
-    CategoryResponse deleteCategory(@RequestParam Long categoryId) {
+    @DeleteMapping(value = "/delete")
+    public CategoryResponse deleteCategory(@RequestParam Long categoryId) {
         return categoryService.deleteCategory(categoryId);
     }
 
+
+
+
+//    API TEST
+//    ---------------------------------------------------------------------------------------------------------
+//    @DeleteMapping(value = "/deleteCourseType")
+//    void deleteCourseType(@RequestParam Long courseTypeId) {
+//        courseTypeRepository.deleteById(courseTypeId);
+//    }
+//    @GetMapping(value = "/get")
+//    public Iterable<CourseType> getA() {
+//        return courseTypeRepository.findAll();
+//    }
+//    @GetMapping(value = "/get1")
+//    public Iterable<Course> getA1() {
+//        return courseRepository.findAll();
+//    }
 }

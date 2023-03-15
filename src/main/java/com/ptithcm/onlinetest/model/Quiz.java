@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Data
@@ -27,7 +25,7 @@ public class Quiz extends DateAudit {
 
     private String metaTitle;
 
-    private String slug;
+    private String linkImage;
 
     private String summary;
 
@@ -45,23 +43,30 @@ public class Quiz extends DateAudit {
 
     private String content;
 
-    @OneToMany(mappedBy = "quiz", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JsonIgnore
-    private Set<QuizQuestion> quizQuestions = new HashSet<>();
-
-    @OneToMany(mappedBy = "quiz", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JsonIgnore
-    private Set<QuizAnswer> quizzAnswers = new HashSet<>();
-
-    @OneToMany(mappedBy = "quiz", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JsonIgnore
-    private Set<Take> takes = new HashSet<>();
+//    @OneToMany(mappedBy = "quiz", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+//    @JsonIgnore
+//    private Set<QuizQuestion> quizQuestions = new HashSet<>();
+//
+//    @OneToMany(mappedBy = "quiz", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+//    @JsonIgnore
+//    private Set<QuizAnswer> quizzAnswers = new HashSet<>();
+//
+//    @OneToMany(mappedBy = "quiz", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+//    @JsonIgnore
+//    private Set<Take> takes = new HashSet<>();
 
     //host id is foreign key of User
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(nullable = true)
+    @JsonIgnore
     private User user;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+//    @EqualsAndHashCode.Exclude
+//    @ToString.Exclude
+//    @ManyToOne(fetch = FetchType.EAGER)
+//    @JoinColumn(name = "category_id", nullable = false)
+    @ManyToOne()
+    @JsonIgnore
+    @JoinColumn(name = "catergory_id")
     private Category category;
 }
