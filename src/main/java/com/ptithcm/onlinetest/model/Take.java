@@ -1,5 +1,6 @@
 package com.ptithcm.onlinetest.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ptithcm.onlinetest.model.audit.DateAudit;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,11 +19,11 @@ public class Take extends DateAudit {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private int status;
+    private String status;
 
     private int score;
 
-    private int published;
+//    private int published;
 
     private Instant startedAt;
 
@@ -32,6 +33,10 @@ public class Take extends DateAudit {
 
     @ManyToOne(fetch = FetchType.EAGER)
     private Quiz quiz;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JsonIgnore
+    private User user;
 
 //    @OneToMany(mappedBy = "take")
 //    @JsonIgnore

@@ -43,17 +43,6 @@ public class Quiz extends DateAudit {
 
     private String content;
 
-//    @OneToMany(mappedBy = "quiz", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-//    @JsonIgnore
-//    private Set<QuizQuestion> quizQuestions = new HashSet<>();
-//
-//    @OneToMany(mappedBy = "quiz", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-//    @JsonIgnore
-//    private Set<QuizAnswer> quizzAnswers = new HashSet<>();
-//
-//    @OneToMany(mappedBy = "quiz", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-//    @JsonIgnore
-//    private Set<Take> takes = new HashSet<>();
 
     //host id is foreign key of User
     @ManyToOne(fetch = FetchType.EAGER)
@@ -61,10 +50,6 @@ public class Quiz extends DateAudit {
     @JsonIgnore
     private User user;
 
-//    @EqualsAndHashCode.Exclude
-//    @ToString.Exclude
-//    @ManyToOne(fetch = FetchType.EAGER)
-//    @JoinColumn(name = "category_id", nullable = false)
     @ManyToOne()
     @JsonIgnore
     @JoinColumn(name = "catergory_id")

@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 public class UserPrincipal implements UserDetails {
 
-//    private User user;
     private Long id;
 
 
@@ -25,15 +24,16 @@ public class UserPrincipal implements UserDetails {
     @JsonIgnore
     private String password;
 
-//    private boolean isEnable;
+    private final boolean isEnable;
 
     private Collection<? extends GrantedAuthority> authorities;
 
-    public UserPrincipal(Long id, String username, String email, String password, Collection<? extends GrantedAuthority> authorities) {
+    public UserPrincipal(Long id, String username, String email, String password, Boolean isEnable,  Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
+        this.isEnable = isEnable;
         this.authorities = authorities;
     }
 
@@ -47,6 +47,7 @@ public class UserPrincipal implements UserDetails {
                 user.getUsername(),
                 user.getEmail(),
                 user.getPassword(),
+                user.getEnable(),
                 authorities
                 );
     }
@@ -112,7 +113,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return isEnable;
     }
 
     @Override

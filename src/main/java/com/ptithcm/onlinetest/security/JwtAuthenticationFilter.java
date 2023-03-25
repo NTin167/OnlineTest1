@@ -22,7 +22,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private JwtTokenProvider jwtTokeProvider;
 
     @Autowired
-    private CustomerUserDetailService customerUserDetailService;
+    private CustomUserDetailsService customUserDetailsService;
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
@@ -31,10 +31,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                                             throws ServletException, IOException {
         try {
             String jwt = getJwtFromRequest(request);
-
+            if(jwt == null) {
+                System.out.println("jwt roonxg");
+            }
+            System.out.println("jwt" + jwt);
             if(StringUtils.hasText(jwt) && jwtTokeProvider.validateToken(jwt)) {
                 Long userId = jwtTokeProvider.getUserIdToJWT(jwt);
-                UserDetails userDetails = customerUserDetailService.loadUserById(userId);
+                System.out.println("userID" + userId);
+                UserDetails userDetails = customUserDetailsService.loadUserById(userId);
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()
                 );
@@ -51,8 +55,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = String.valueOf(request.getHeaders("Authorization"));
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7, bearerToken.length());
         }
         return null;

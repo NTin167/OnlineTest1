@@ -1,6 +1,6 @@
 package com.ptithcm.onlinetest.config;
 
-import com.ptithcm.onlinetest.security.CustomerUserDetailService;
+import com.ptithcm.onlinetest.security.CustomUserDetailsService;
 import com.ptithcm.onlinetest.security.JwtAuthenticationEntryPoint;
 import com.ptithcm.onlinetest.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +28,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 )
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
-    CustomerUserDetailService customerUserDetailService;
+    CustomUserDetailsService customUserDetailsService;
+
     @Autowired
-    private JwtAuthenticationEntryPoint unauthorizedHandle;
+    private JwtAuthenticationEntryPoint unauthorizedHandler;
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
@@ -38,8 +39,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(customerUserDetailService)
+    public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
+        authenticationManagerBuilder
+                .userDetailsService(customUserDetailsService)
                 .passwordEncoder(passwordEncoder());
     }
 
@@ -62,7 +64,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     .csrf()
                         .disable()
                     .exceptionHandling()
-                        .authenticationEntryPoint(unauthorizedHandle)
+                        .authenticationEntryPoint(unauthorizedHandler)
                         .and()
                     .sessionManagement()
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -84,10 +86,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         .permitAll()
                     .antMatchers(HttpMethod.GET, "/api/polls/**", "/api/users/**")
                         .permitAll()
-                .antMatchers("/**")
-                .permitAll()
+//                    .antMatchers("/**")
+//                        .permitAll()
                     .anyRequest()
-                    .authenticated();
+                        .authenticated();
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 }

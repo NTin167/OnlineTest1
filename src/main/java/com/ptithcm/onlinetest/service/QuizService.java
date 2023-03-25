@@ -4,30 +4,36 @@ import com.ptithcm.onlinetest.exception.BadRequestException;
 import com.ptithcm.onlinetest.exception.ResourceNotFoundException;
 import com.ptithcm.onlinetest.model.Category;
 import com.ptithcm.onlinetest.model.Quiz;
+import com.ptithcm.onlinetest.model.Take;
 import com.ptithcm.onlinetest.model.User;
+import com.ptithcm.onlinetest.payload.dto.QuestionTakeDto;
 import com.ptithcm.onlinetest.payload.request.QuizRequest;
 import com.ptithcm.onlinetest.payload.response.ApiResponse;
 import com.ptithcm.onlinetest.payload.response.PagedResponse;
 import com.ptithcm.onlinetest.payload.response.QuizResponse;
-import com.ptithcm.onlinetest.repository.CategoryRepository;
-import com.ptithcm.onlinetest.repository.QuizRepository;
-import com.ptithcm.onlinetest.repository.UserRepository;
+import com.ptithcm.onlinetest.repository.*;
+import com.ptithcm.onlinetest.security.UserPrincipal;
 import com.ptithcm.onlinetest.util.AppConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
 
 @Transactional
 @Service
 public class QuizService implements IQuizService{
+
+    @Autowired
+    QuizQuestionService quizQuestionService;
     @Autowired
     QuizRepository quizRepository;
 
@@ -36,6 +42,12 @@ public class QuizService implements IQuizService{
 
     @Autowired
     CategoryRepository categoryRepository;
+
+    @Autowired
+    TakeRepository takeRepository;
+
+    @Autowired
+    QuizAnswerRepository quizAnswerRepository;
     @Override
     public QuizResponse createQuiz(QuizRequest quizRequest) throws IOException {
         User user = userRepository.findById(quizRequest.getUserId())
@@ -168,4 +180,33 @@ public class QuizService implements IQuizService{
                 quizzes.getTotalElements(), quizzes.getTotalPages(), quizzes.isLast());
 
     }
+
+    @Override
+    public QuestionTakeDto takeQuestion(UserPrincipal userPrincipal, Long quizId) {
+        Take take = new Take();
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("QUiz", "id", quizId));
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "userId", userPrincipal.getId()));
+        take.setStartedAt(Instant.now());
+        take.setStatus("started");
+        take.setQuiz(quiz);
+        take.setUser(user);
+        takeRepository.save(take);
+        take.setContent(String.valueOf(take.getUser().getId()));
+        QuestionTakeDto questionTakeDto = new QuestionTakeDto();
+        questionTakeDto.setQuizQuestionDto(quizQuestionService.getQuestionAndAnswerOfQuiz(quizId));
+        questionTakeDto.setTake(take);
+        return questionTakeDto;
+    }
+    public ResponseEntity<?> tinhDiem() {
+        // list bài quiz, câu hỏi và đáp án đã chọn
+//        Set<QuizQuestionDto> questionTakeDtos = question.getQuizQuestionDto();
+
+//        QuizAnswer quizAnswer = quizAnswerRepository.findAllByQuizQuestionId(question.getTake().getQuiz().get)
+        Iterable<?> quizAnswerDtos = quizAnswerRepository.getQuizAnswerTrue();
+
+        return ResponseEntity.ok(quizAnswerDtos);
+    }
+
 }

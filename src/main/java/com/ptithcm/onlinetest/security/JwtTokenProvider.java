@@ -35,7 +35,7 @@ public class JwtTokenProvider {
 
     public Long getUserIdToJWT(String token) {
         Claims claims = Jwts.parser().setSigningKey(jwtSecret)
-                .parseClaimsJwt(token)
+                .parseClaimsJws(token)
                 .getBody();
         return Long.parseLong(claims.getSubject());
     }
