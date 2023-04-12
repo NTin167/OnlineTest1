@@ -1,18 +1,23 @@
 package com.ptithcm.onlinetest.payload.request;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class QuizRequest {
     private String title;
 
     private String metaTitle;
 
-    private String linkImage;
+    private MultipartFile linkImage;
 
     private String summary;
 
@@ -29,8 +34,6 @@ public class QuizRequest {
     private Instant endsAt;
 
     private String content;
-
-    private Long userId;
 
     private Long categoryId;
 }

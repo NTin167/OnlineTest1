@@ -19,7 +19,7 @@ public class QuizAnswer{
 
     private int active;
 
-    private int correct;
+    private boolean correct;
 
     private String content;
 
@@ -28,8 +28,9 @@ public class QuizAnswer{
     @JsonIgnore
     private QuizQuestion quizQuestion;
 
-//    @ManyToOne(fetch = FetchType.EAGER)
-//    @JoinColumn(name = "quiz_id", nullable = false)
-//    private Quiz quiz;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "quiz_id", nullable = false)
+    @JsonIgnore
+    private Quiz quiz;
 
 }

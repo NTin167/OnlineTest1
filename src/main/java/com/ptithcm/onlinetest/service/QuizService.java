@@ -2,10 +2,7 @@ package com.ptithcm.onlinetest.service;
 
 import com.ptithcm.onlinetest.exception.BadRequestException;
 import com.ptithcm.onlinetest.exception.ResourceNotFoundException;
-import com.ptithcm.onlinetest.model.Category;
-import com.ptithcm.onlinetest.model.Quiz;
-import com.ptithcm.onlinetest.model.Take;
-import com.ptithcm.onlinetest.model.User;
+import com.ptithcm.onlinetest.model.*;
 import com.ptithcm.onlinetest.payload.dto.QuestionTakeDto;
 import com.ptithcm.onlinetest.payload.request.QuizRequest;
 import com.ptithcm.onlinetest.payload.response.ApiResponse;
@@ -13,6 +10,7 @@ import com.ptithcm.onlinetest.payload.response.PagedResponse;
 import com.ptithcm.onlinetest.payload.response.QuizResponse;
 import com.ptithcm.onlinetest.repository.*;
 import com.ptithcm.onlinetest.security.UserPrincipal;
+import com.ptithcm.onlinetest.service.firebase.FirebaseService;
 import com.ptithcm.onlinetest.util.AppConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,11 +20,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -36,6 +38,9 @@ public class QuizService implements IQuizService{
     QuizQuestionService quizQuestionService;
     @Autowired
     QuizRepository quizRepository;
+
+    @Autowired
+    QuizQuestionRepository quizQuestionRepository;
 
     @Autowired
     UserRepository userRepository;
@@ -48,10 +53,13 @@ public class QuizService implements IQuizService{
 
     @Autowired
     QuizAnswerRepository quizAnswerRepository;
+
+    @Autowired
+    FirebaseService service;
     @Override
-    public QuizResponse createQuiz(QuizRequest quizRequest) throws IOException {
-        User user = userRepository.findById(quizRequest.getUserId())
-                .orElseThrow(()-> new ResourceNotFoundException("User", "id", quizRequest.getUserId()));
+    public QuizResponse createQuiz(QuizRequest quizRequest, UserPrincipal userPrincipal, MultipartFile fileImage) throws IOException {
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(()-> new ResourceNotFoundException("User", "id", userPrincipal.getId()));
         Category category = categoryRepository.findById(quizRequest.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", quizRequest.getCategoryId()));
         if(user == null || category == null)
@@ -62,7 +70,7 @@ public class QuizService implements IQuizService{
         Quiz quiz = Quiz.builder()
                 .title(quizRequest.getTitle())
                 .metaTitle(quizRequest.getMetaTitle())
-                .linkImage(quizRequest.getLinkImage())
+                .linkImage(service.save(fileImage))
                 .summary(quizRequest.getSummary())
                 .type(quizRequest.getType())
                 .score(quizRequest.getScore())
@@ -84,27 +92,31 @@ public class QuizService implements IQuizService{
     }
 
     @Override
-    public QuizResponse updateQuiz(Long quizId, QuizRequest quizRequest) {
+    public QuizResponse updateQuiz(Long quizId, QuizRequest quizRequest, UserPrincipal userPrincipal, MultipartFile fileImage) {
         Optional<Quiz> quizOptional = quizRepository.findById(quizId);
         if(!quizOptional.isPresent()) {
             return QuizResponse.builder().status(true).message("Update quiz successfully").quiz(quizOptional.get()).build();
         }
         Quiz quiz = quizOptional.get();
-        quiz = Quiz.builder()
-                .title(quizRequest.getTitle())
-                .metaTitle(quizRequest.getMetaTitle())
-                .linkImage(quizRequest.getLinkImage())
-                .summary(quizRequest.getSummary())
-                .type(quizRequest.getType())
-                .score(quizRequest.getScore())
-                .published(quizRequest.getPublished())
-                .publishedAt(quizRequest.getPublishedAt())
-                .startsAt(quizRequest.getStartsAt())
-                .endsAt(quizRequest.getEndsAt())
-                .content(quizRequest.getContent())
-                .build();
-        if(quizRequest.getUserId() != null) {
-            Optional<User> userOptional = userRepository.findById(quizRequest.getUserId());
+        try {
+            quiz = Quiz.builder()
+                    .title(quizRequest.getTitle())
+                    .metaTitle(quizRequest.getMetaTitle())
+                    .linkImage(service.save(fileImage))
+                    .summary(quizRequest.getSummary())
+                    .type(quizRequest.getType())
+                    .score(quizRequest.getScore())
+                    .published(quizRequest.getPublished())
+                    .publishedAt(quizRequest.getPublishedAt())
+                    .startsAt(quizRequest.getStartsAt())
+                    .endsAt(quizRequest.getEndsAt())
+                    .content(quizRequest.getContent())
+                    .build();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if(userPrincipal != null) {
+            Optional<User> userOptional = userRepository.findById(userPrincipal.getId());
             if(userOptional.isPresent()) {
                 quiz.setUser(userOptional.get());
             }
@@ -132,9 +144,9 @@ public class QuizService implements IQuizService{
     }
 
     @Override
-    public ApiResponse createQuizx(QuizRequest quizRequest) {
-        User user = userRepository.findById(quizRequest.getUserId())
-                .orElseThrow(()-> new ResourceNotFoundException("User", "id", quizRequest.getUserId()));
+    public ApiResponse createQuizx(QuizRequest quizRequest, UserPrincipal userPrincipal) {
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(()-> new ResourceNotFoundException("User", "id", userPrincipal.getId()));
         Category category = categoryRepository.findById(quizRequest.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", quizRequest.getCategoryId()));
         if(user == null || category == null)
@@ -145,7 +157,7 @@ public class QuizService implements IQuizService{
         Quiz quiz = Quiz.builder()
                 .title(quizRequest.getTitle())
                 .metaTitle(quizRequest.getMetaTitle())
-                .linkImage(quizRequest.getLinkImage())
+//                .linkImage(service.save(f))
                 .summary(quizRequest.getSummary())
                 .type(quizRequest.getType())
                 .score(quizRequest.getScore())
@@ -204,9 +216,41 @@ public class QuizService implements IQuizService{
 //        Set<QuizQuestionDto> questionTakeDtos = question.getQuizQuestionDto();
 
 //        QuizAnswer quizAnswer = quizAnswerRepository.findAllByQuizQuestionId(question.getTake().getQuiz().get)
-        Iterable<?> quizAnswerDtos = quizAnswerRepository.getQuizAnswerTrue();
+        Long quizId = Long.valueOf(1);
+        List<Map<String, Object>> quizAnswerDtos = quizAnswerRepository.getQuizAnswerTrueByQuizId(quizId);
 
         return ResponseEntity.ok(quizAnswerDtos);
     }
 
+
+//    ============================ TEST ==================================
+    public ResponseEntity<?> submitQuiz(Long quizId, List<Long> answerIds) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("QUiz", "quizid", quizId));
+        List<QuizQuestion> questions = quizQuestionRepository.findByQuizId(quizId);
+        List<QuizAnswer> answers = quizAnswerRepository.findByIdIn(answerIds);
+        int score = caculateScore(questions, answers);
+        return ResponseEntity.ok(score);
+    }
+
+    public int caculateScore(List<QuizQuestion> questions, List<QuizAnswer> answers) {
+        int correctAnswers = 0;
+        for (QuizQuestion question : questions) {
+            // đáp án đúng của câu hỏi thứ 1 - 2 - 3 - 4 - ...
+            List<QuizAnswer> correctAnswersForQuestion = quizAnswerRepository.findByQuizQuestionIdAndCorrectIsTrue(question.getId());
+            System.out.println("correctAnswersForQuestion" + correctAnswersForQuestion);
+            List<QuizAnswer> userAnswersForQuestion = answers.stream()
+                    .filter(answer -> answer.getQuizQuestion().getId().equals(question.getId()))
+                    .collect(Collectors.toList());
+
+            for(QuizAnswer aq:userAnswersForQuestion) {
+                if(correctAnswersForQuestion.contains(aq)) {
+                    System.out.println("SUCCCCCCCCCEEEEEEEEEEEEESSSSSSSSSS");
+                    correctAnswers++;
+                }
+            }
+        }
+        int totalQuestions = questions.size();
+        return Math.round((float) correctAnswers / totalQuestions * 100);
+    }
 }

@@ -11,6 +11,7 @@ import com.ptithcm.onlinetest.payload.response.CategoryResponse;
 import com.ptithcm.onlinetest.repository.CategoryRepository;
 import com.ptithcm.onlinetest.repository.QuizRepository;
 import com.ptithcm.onlinetest.repository.UserRepository;
+import com.ptithcm.onlinetest.security.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,23 +47,23 @@ public class CategoryService implements ICategoryService{
                 .orElseThrow(() -> new EntityNotFoundException("Category not found with id" + categoryId));
     }
     @Override
-    public Category createCategory(CategoryRequest categoryRequest) {
+    public Category createCategory(CategoryRequest categoryRequest, UserPrincipal userPrincipal) {
         if(categoryRepository.existsByTitle(categoryRequest.getTitle()))
             throw new BadRequestException("Sorry! This Category has already Title");
         Category newCategory = Category.builder().title(categoryRequest.getTitle()).description(categoryRequest.getDescription()).build();
 
-        Optional<User> user = userRepository.findById(categoryRequest.getUserId());
+        Optional<User> user = userRepository.findById(userPrincipal.getId());
         if(user.isPresent()) {
             newCategory.setUser(user.get());
         }
         else
         {
-            throw new ResourceNotFoundException("user", "userId", user);
+            throw new ResourceNotFoundException("User", "userId", userPrincipal.getId());
         }
         return categoryRepository.save(newCategory);
     }
     @Override
-    public CategoryResponse updateCategory(Long categoryId, CategoryRequest categoryRequest) {
+    public CategoryResponse updateCategory(Long categoryId, CategoryRequest categoryRequest, UserPrincipal userPrincipal) {
         Optional<Category> category = categoryRepository.findById(categoryId);
 
         if(!category.isPresent()) {
@@ -74,8 +75,8 @@ public class CategoryService implements ICategoryService{
         if(categoryRequest.getDescription() != null) {
             category.get().setDescription(categoryRequest.getDescription());
         }
-        Optional<User> user = userRepository.findById(categoryRequest.getUserId());
-        if(categoryRequest.getUserId()!= null && user.isPresent()) {
+        Optional<User> user = userRepository.findById(userPrincipal.getId());
+        if(userPrincipal.getId()!= null && user.isPresent()) {
             category.get().setUser(user.get());
         }
         else
