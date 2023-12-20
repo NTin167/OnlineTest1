@@ -31,10 +31,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                                             throws ServletException, IOException {
         try {
             String jwt = getJwtFromRequest(request);
-            if(jwt == null) {
-                System.out.println("jwt roonxg");
-            }
-            System.out.println("jwt" + jwt);
             if(StringUtils.hasText(jwt) && jwtTokeProvider.validateToken(jwt)) {
                 Long userId = jwtTokeProvider.getUserIdToJWT(jwt);
                 System.out.println("userID" + userId);
